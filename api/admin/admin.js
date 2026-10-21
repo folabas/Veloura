@@ -226,21 +226,34 @@ function removePhoto(i) {
   renderPhotos();
 }
 
-// Phone photos can be 5–10 MB. Shrinking them here first makes uploads fast on mobile data and
-// keeps each request well under the website's size limit when the panel is opened at the site's /admin.
-const MAX_EDGE = 2400;
+// Phone photos can be 5–10 MB. They're prepared here at high quality, just big enough for the
+// stored 2560px master, and kept under the size the website can pass through (about 4 MB).
+const MAX_EDGE = 2560;
+const MAX_BYTES = 3.8 * 1024 * 1024;
 async function shrink(file) {
   try {
     const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
     const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    // Already small enough and a format the server reads: send the original untouched.
+    if (scale === 1 && file.size <= MAX_BYTES && /^image\/(jpeg|png|webp)$/.test(file.type)) {
+      bitmap.close?.();
+      return file;
+    }
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     bitmap.close?.();
-    const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.88));
-    if (!blob) return file;
-    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+    // Start near-lossless and only step down if the file would be too big to send.
+    for (const quality of [0.95, 0.92, 0.88, 0.84]) {
+      const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", quality));
+      if (blob && (blob.size <= MAX_BYTES || quality === 0.84)) {
+        return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+      }
+    }
+    return file;
   } catch {
     return file; // e.g. HEIC on a browser that can't read it: the server converts it instead
   }

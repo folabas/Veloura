@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   images: {
     // AVIF is noticeably smaller than WebP for photos; browsers without it get WebP.
     formats: ["image/avif", "image/webp"],
+    // Every photo is served at quality 90 (Next's default is 75), so prints and fabric stay crisp.
+    qualities: [90],
+    // Up to 4K-wide screens, so full-width photos stay sharp on large high-resolution displays.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1440, 1920, 2048, 2560, 3840],
     // Product photos rarely change, so let browsers and CDNs keep resized copies for a month.
     minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
