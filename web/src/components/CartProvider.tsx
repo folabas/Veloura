@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getProduct } from "@/lib/products";
+import { useCatalog } from "./CatalogProvider";
 
 export type CartLine = { slug: string; quantity: number };
 
@@ -22,6 +22,7 @@ export const MAX_QUANTITY = 10;
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { getProduct } = useCatalog();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -35,7 +36,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setLines([]);
     }
     setReady(true);
-  }, []);
+  }, [getProduct]);
 
   useEffect(() => {
     if (!ready) return;
@@ -71,7 +72,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const count = lines.reduce((n, l) => n + l.quantity, 0);
     const subtotal = lines.reduce((sum, l) => sum + (getProduct(l.slug)?.price ?? 0) * l.quantity, 0);
     return { lines, count, subtotal, ready, add, setQuantity, remove, clear };
-  }, [lines, ready, add, setQuantity, remove, clear]);
+  }, [lines, ready, add, setQuantity, remove, clear, getProduct]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

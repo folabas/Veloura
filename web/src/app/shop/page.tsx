@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
-import { categories, getCategory, productsIn } from "@/lib/products";
+import { findCategory, getCatalog, productsIn } from "@/lib/catalog";
 
 export const metadata: Metadata = { title: "Shop" };
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category: slug } = await searchParams;
-  const category = getCategory(slug);
-  const list = productsIn(category?.slug);
+  const catalog = await getCatalog();
+  const { categories } = catalog;
+  const category = findCategory(catalog, slug);
+  const list = productsIn(catalog, category?.slug);
 
   return (
     <div className="wrap">

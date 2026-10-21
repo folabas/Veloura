@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Bodoni_Moda, Jost } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
+import { CatalogProvider } from "@/components/CatalogProvider";
+import { getCatalog } from "@/lib/catalog";
 import { ImageCursor } from "@/components/ImageCursor";
 import { Motion } from "@/components/Motion";
 import { PageTransition } from "@/components/PageTransition";
@@ -33,7 +35,8 @@ export const viewport: Viewport = {
   themeColor: "#f4eee6",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const catalog = await getCatalog();
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <head>
@@ -41,14 +44,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body>
         <Splash />
-        <CartProvider>
-          <SiteHeader />
-          <main>{children}</main>
-          <SiteFooter />
-          <PageTransition />
-          <ImageCursor />
-          <Motion />
-        </CartProvider>
+        <CatalogProvider catalog={catalog}>
+          <CartProvider>
+            <SiteHeader />
+            <main>{children}</main>
+            <SiteFooter categories={catalog.categories} />
+            <PageTransition />
+            <ImageCursor />
+            <Motion />
+          </CartProvider>
+        </CatalogProvider>
       </body>
     </html>
   );

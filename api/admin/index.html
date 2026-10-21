@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Veloura Admin</title>
+  <link rel="icon" href="icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Jost:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- Sign in -->
+  <main id="login" class="login" hidden>
+    <form id="login-form" class="login-card">
+      <span class="logo logo-lg" aria-hidden="true"></span>
+      <h1>Content <em>studio</em></h1>
+      <p class="muted">Manage products, photos and prices for the Veloura website.</p>
+      <label class="field">
+        <span class="label">Username</span>
+        <input id="login-username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </label>
+      <label class="field">
+        <span class="label">Password</span>
+        <input id="login-password" type="password" autocomplete="current-password" required>
+      </label>
+      <p id="login-error" class="error" role="alert"></p>
+      <button class="btn btn-clay" type="submit">Sign in</button>
+    </form>
+  </main>
+
+  <!-- App -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <a class="brand" href="#products"><span class="logo" aria-hidden="true"></span><span class="wordmark">Veloura</span><span class="tag">Studio</span></a>
+      <nav class="tabs" aria-label="Sections">
+        <a href="#products" data-tab="products">Products</a>
+        <a href="#categories" data-tab="categories">Categories</a>
+      </nav>
+      <button id="logout" class="link-btn" type="button">Sign out</button>
+    </header>
+
+    <!-- Products list -->
+    <section id="view-products" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <p class="label muted">Catalogue</p>
+          <h2>Products <span id="product-count" class="count"></span></h2>
+        </div>
+        <button id="new-product" class="btn btn-clay" type="button">Add product</button>
+      </div>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search by name or colour" aria-label="Search products">
+        <select id="filter-category" aria-label="Filter by category"></select>
+        <select id="filter-status" aria-label="Filter by status">
+          <option value="">All</option>
+          <option value="new">New in</option>
+          <option value="soldout">Sold out</option>
+          <option value="hidden">Hidden</option>
+        </select>
+      </div>
+      <div id="product-grid" class="product-grid"></div>
+      <p id="product-empty" class="empty" hidden></p>
+    </section>
+
+    <!-- Product editor -->
+    <section id="view-editor" class="view" hidden>
+      <form id="product-form" class="editor" novalidate>
+        <div class="view-head">
+          <div>
+            <a href="#products" class="back label">← All products</a>
+            <h2 id="editor-title">New product</h2>
+          </div>
+          <div class="actions">
+            <button id="delete-product" class="btn btn-line danger" type="button" hidden>Delete</button>
+            <button class="btn btn-clay" type="submit">Save</button>
+          </div>
+        </div>
+
+        <div class="editor-grid">
+          <div class="panel">
+            <h3>Details</h3>
+            <label class="field"><span class="label">Name</span><input id="f-name" required maxlength="120" placeholder="e.g. Bow Print Scarf"></label>
+            <div class="row">
+              <label class="field"><span class="label">Colour</span><input id="f-colour" maxlength="60" placeholder="e.g. Rose pink"></label>
+              <label class="field"><span class="label">Category</span><select id="f-category" required></select></label>
+            </div>
+            <div class="row">
+              <label class="field"><span class="label">Price (₦)</span><input id="f-price" type="number" inputmode="numeric" min="0" step="1" required placeholder="12500"></label>
+              <label class="field"><span class="label">Display order</span><input id="f-order" type="number" min="0" step="1" value="0"><small class="hint">Lower numbers show first.</small></label>
+            </div>
+            <label class="field"><span class="label">Description</span><textarea id="f-description" rows="4" maxlength="2000" placeholder="A line or two about the piece."></textarea></label>
+
+            <div class="field">
+              <span class="label">Product details</span>
+              <div id="details" class="details"></div>
+              <button id="add-detail" class="link-btn" type="button">+ Add a detail (fabric, size, care…)</button>
+            </div>
+          </div>
+
+          <div class="side">
+            <div class="panel">
+              <h3>Photos</h3>
+              <p class="hint">The first photo is the main one. Use the arrows to reorder.</p>
+              <div id="photos" class="photos"></div>
+              <label class="dropzone" id="dropzone">
+                <input id="photo-input" type="file" accept="image/*" multiple>
+                <span><strong>Add photos</strong><br>or drop them here. JPG, PNG, WebP or HEIC.</span>
+              </label>
+              <p id="upload-status" class="hint" aria-live="polite"></p>
+            </div>
+
+            <div class="panel">
+              <h3>On the website</h3>
+              <label class="toggle"><input id="f-published" type="checkbox" checked><span>Visible on the site</span></label>
+              <label class="toggle"><input id="f-new" type="checkbox"><span>Show in "New in"</span></label>
+              <label class="toggle"><input id="f-soldout" type="checkbox"><span>Sold out</span></label>
+              <label class="field"><span class="label">Link name</span><input id="f-slug" maxlength="80" placeholder="Made from the name"><small class="hint">The end of the product's web address. Leave empty to create it automatically.</small></label>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Categories -->
+    <section id="view-categories" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <p class="label muted">Shop sections</p>
+          <h2>Categories</h2>
+        </div>
+      </div>
+      <form id="category-form" class="panel category-add">
+        <label class="field"><span class="label">New category</span><input id="c-name" required maxlength="60" placeholder="e.g. Abaya sets"></label>
+        <label class="field small"><span class="label">Order</span><input id="c-order" type="number" min="0" value="0"></label>
+        <button class="btn btn-clay" type="submit">Add</button>
+      </form>
+      <div id="category-list" class="category-list"></div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="admin.js" defer></script>
+</body>
+</html>

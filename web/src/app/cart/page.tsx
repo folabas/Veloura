@@ -3,10 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MAX_QUANTITY, useCart } from "@/components/CartProvider";
-import { formatNaira, getProduct } from "@/lib/products";
+import { useCatalog } from "@/components/CatalogProvider";
+import { formatNaira } from "@/lib/products";
 
 export default function CartPage() {
   const { lines, subtotal, ready, setQuantity, remove } = useCart();
+  const { getProduct } = useCatalog();
 
   return (
     <div className="wrap">

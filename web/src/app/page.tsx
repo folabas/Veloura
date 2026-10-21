@@ -6,7 +6,8 @@ import { Newsletter } from "@/components/Newsletter";
 import { Photo } from "@/components/Photo";
 import { RevealText } from "@/components/RevealText";
 import { collections } from "@/lib/collections";
-import { categories, formatNaira, getCategory, products, type Product } from "@/lib/products";
+import { findCategory, getCatalog } from "@/lib/catalog";
+import { formatNaira, type Product } from "@/lib/products";
 
 const collage = [
   { src: "/images/polka-dot-white.webp", alt: "Model in the ivory polka dot scarf", speed: 0.1 },
@@ -25,13 +26,18 @@ const categoryPhotos = [
 // The spotlight fills 12 tiles (6 columns of 2), repeating the newest pieces until there are
 // enough real products to fill it on their own.
 function mosaicColumns(list: Product[], tiles = 12, columns = 6) {
+  if (!list.length) return [];
   const filled = Array.from({ length: tiles }, (_, i) => ({ product: list[i % list.length], key: `${list[i % list.length].slug}-${i}` }));
   return Array.from({ length: columns }, (_, c) => filled.filter((_, i) => i % columns === c));
 }
 
-export default function Home() {
+export default async function Home() {
+  const catalog = await getCatalog();
+  const { categories, products } = catalog;
   const edit = collections[0];
-  const newest = products.filter((p) => p.isNew);
+  const withPhotos = products.filter((p) => p.images.length > 0);
+  const marked = withPhotos.filter((p) => p.isNew);
+  const newest = marked.length ? marked : withPhotos;
 
   return (
     <>
@@ -167,15 +173,20 @@ export default function Home() {
                 <Link className="tile" href={`/shop/${p.slug}`} key={key} data-reveal="image">
                   <Image
                     src={p.images[0].src}
-                    alt={`${p.name}, ${p.colour}`}
+                    alt={p.images[0].alt || p.name}
                     fill
                     sizes="(max-width: 720px) 33vw, 17vw"
                     style={{ objectFit: "cover", objectPosition: p.images[0].focus ?? "50% 30%" }}
                   />
                   <span className="tile-info">
-                    <span className="label">{getCategory(p.category)?.name}</span>
+                    <span className="label">{findCategory(catalog, p.category)?.name}</span>
                     <span className="tile-name">
-                      {p.name}, <em>{p.colour}</em>
+                      {p.name}
+                      {p.colour && (
+                        <>
+                          , <em>{p.colour}</em>
+                        </>
+                      )}
                     </span>
                     <span className="price">{formatNaira(p.price)}</span>
                   </span>

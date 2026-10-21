@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { CircleBadge } from "./CircleBadge";
 import { Logo } from "./Logo";
+import type { Category } from "@/lib/products";
 import { PHONE_DISPLAY, PHONE_TEL, socials, whatsappLink } from "@/lib/site";
 
-export function SiteFooter() {
+export function SiteFooter({ categories }: { categories: Category[] }) {
   return (
     <>
       <section className="help" aria-labelledby="help-title">
@@ -44,10 +45,9 @@ export function SiteFooter() {
           <div>
             <h3 className="label">Shop</h3>
             <ul>
-              <li><Link href="/shop?category=scarves">Scarves</Link></li>
-              <li><Link href="/shop?category=everyday">Everyday</Link></li>
-              <li><Link href="/shop?category=abaya-sets">Abaya sets</Link></li>
-              <li><Link href="/shop?category=statement">Statement pieces</Link></li>
+              {categories.map((c) => (
+                <li key={c.slug}><Link href={`/shop?category=${c.slug}`}>{c.name}</Link></li>
+              ))}
             </ul>
           </div>
           <div>

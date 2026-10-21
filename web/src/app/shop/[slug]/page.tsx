@@ -4,25 +4,28 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToBag } from "@/components/AddToBag";
 import { ProductCard } from "@/components/ProductCard";
-import { formatNaira, getCategory, getProduct, products } from "@/lib/products";
+import { findCategory, findProduct, getCatalog } from "@/lib/catalog";
+import { formatNaira } from "@/lib/products";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
+// Known products are built ahead; ones added later in the admin panel render on first visit.
+export async function generateStaticParams() {
+  return (await getCatalog()).products.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = getProduct((await params).slug);
-  return product ? { title: `${product.name}, ${product.colour}`, description: product.description } : {};
+  const product = findProduct(await getCatalog(), (await params).slug);
+  return product ? { title: product.colour ? `${product.name}, ${product.colour}` : product.name, description: product.description } : {};
 }
 
 export default async function ProductPage({ params }: Props) {
-  const product = getProduct((await params).slug);
+  const catalog = await getCatalog();
+  const product = findProduct(catalog, (await params).slug);
   if (!product) notFound();
 
-  const category = getCategory(product.category);
-  const related = products.filter((p) => p.slug !== product.slug).slice(0, 4);
+  const category = findCategory(catalog, product.category);
+  const related = catalog.products.filter((p) => p.slug !== product.slug).slice(0, 4);
 
   return (
     <>
@@ -49,7 +52,12 @@ export default async function ProductPage({ params }: Props) {
           </nav>
           <div style={{ display: "grid", gap: 8 }}>
             <h1>
-              {product.name}, <em>{product.colour}</em>
+              {product.name}
+              {product.colour && (
+                <>
+                  , <em>{product.colour}</em>
+                </>
+              )}
             </h1>
             <p className="price">{formatNaira(product.price)}</p>
           </div>

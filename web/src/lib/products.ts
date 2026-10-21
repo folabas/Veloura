@@ -1,10 +1,9 @@
-// Product catalogue. This is the one place to add, edit or remove products.
-// Prices are in naira. PLACEHOLDER: names, prices and details below are samples until the real
-// product list arrives. Images live in /public/images.
+// Product types, plus the sample catalogue the site falls back to when the content API
+// (API_URL) isn't set or can't be reached. Real products are managed in the admin panel.
 
-export type CategorySlug = "scarves" | "everyday" | "abaya-sets" | "statement";
+export type Category = { slug: string; name: string };
 
-export const categories: { slug: CategorySlug; name: string }[] = [
+export const sampleCategories: Category[] = [
   { slug: "scarves", name: "Scarves" },
   { slug: "everyday", name: "Everyday" },
   { slug: "abaya-sets", name: "Abaya sets" },
@@ -15,7 +14,7 @@ export type Product = {
   slug: string;
   name: string;
   colour: string;
-  category: CategorySlug;
+  category: string;
   price: number;
   description: string;
   details: { label: string; value: string }[];
@@ -24,7 +23,7 @@ export type Product = {
   soldOut?: boolean;
 };
 
-export const products: Product[] = [
+export const sampleProducts: Product[] = [
   {
     slug: "bow-print-scarf-rose-pink",
     name: "Bow Print Scarf",
@@ -105,18 +104,6 @@ export const products: Product[] = [
     images: [{ src: "/images/rose-print-brown-outdoor.webp", alt: "Model outdoors wearing the cocoa rose print scarf", focus: "50% 45%" }],
   },
 ];
-
-export function getProduct(slug: string) {
-  return products.find((p) => p.slug === slug);
-}
-
-export function getCategory(slug: string | undefined) {
-  return categories.find((c) => c.slug === slug);
-}
-
-export function productsIn(category?: CategorySlug) {
-  return category ? products.filter((p) => p.category === category) : products;
-}
 
 export function formatNaira(amount: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount);

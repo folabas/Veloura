@@ -10,7 +10,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { RevealText } from "@/components/RevealText";
 import { ScrollDown } from "@/components/ScrollDown";
 import { collections, getCollection } from "@/lib/collections";
-import { formatNaira, getProduct, type Product } from "@/lib/products";
+import { findProduct, getCatalog } from "@/lib/catalog";
+import { formatNaira, type Product } from "@/lib/products";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -29,7 +30,8 @@ const tints = ["#efe6dc", "#e8ddd6", "#e4e2da"];
 export default async function CollectionPage({ params }: Props) {
   const collection = getCollection((await params).slug);
   if (!collection) notFound();
-  const items = collection.productSlugs.map(getProduct).filter((p): p is Product => Boolean(p));
+  const catalog = await getCatalog();
+  const items = collection.productSlugs.map((s) => findProduct(catalog, s)).filter((p): p is Product => Boolean(p));
 
   return (
     <>

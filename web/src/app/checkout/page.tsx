@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
-import { formatNaira, getProduct } from "@/lib/products";
+import { useCatalog } from "@/components/CatalogProvider";
+import { formatNaira } from "@/lib/products";
 import { WHATSAPP_NUMBER, whatsappLink } from "@/lib/site";
 
 const fields = [
@@ -17,6 +18,7 @@ const fields = [
 // Orders go to Veloura on WhatsApp as a pre-filled message; payment is arranged in that chat.
 export default function CheckoutPage() {
   const { lines, subtotal, ready } = useCart();
+  const { getProduct } = useCatalog();
   const [sent, setSent] = useState(false);
   const ordering = WHATSAPP_NUMBER !== "";
 
