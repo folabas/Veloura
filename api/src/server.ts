@@ -23,7 +23,8 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "blob:"],
+        // The panel is also opened through the website's /admin, where photos still come from this API.
+        imgSrc: ["'self'", "data:", "blob:", new URL(config.publicUrl).origin],
         styleSrc: ["'self'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         scriptSrc: ["'self'"],
@@ -44,8 +45,10 @@ app.use(["/api/catalog", "/api/products"], cors({ methods: ["GET"] }));
 app.use(publicRoutes);
 app.use(adminRoutes);
 
-app.use("/admin", express.static(adminDir, { index: "index.html", maxAge: config.isProduction ? "1h" : 0 }));
-app.get("/", (_req, res) => res.redirect("/admin/"));
+// /admin and /admin/ both open the panel (the website forwards /admin here without a trailing slash).
+app.get(["/admin", "/admin/"], (_req, res) => res.sendFile(path.join(adminDir, "index.html")));
+app.use("/admin", express.static(adminDir, { redirect: false, maxAge: config.isProduction ? "1h" : 0 }));
+app.get("/", (_req, res) => res.redirect("/admin"));
 
 const onError: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err);

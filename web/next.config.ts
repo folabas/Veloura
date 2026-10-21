@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.onrender.com", pathname: "/images/**" },
     ],
   },
+  // The admin panel lives on the content API (Render) but opens at this site's /admin.
+  // Requests are passed through, so sign-in stays on the website's own address.
+  async rewrites() {
+    if (!api) return [];
+    const origin = api.origin;
+    return [
+      { source: "/admin", destination: `${origin}/admin` },
+      { source: "/admin/:path*", destination: `${origin}/admin/:path*` },
+      { source: "/api/admin/:path*", destination: `${origin}/api/admin/:path*` },
+    ];
+  },
   experimental: {
     // Ships only the GSAP pieces actually used.
     optimizePackageImports: ["gsap"],

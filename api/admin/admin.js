@@ -226,22 +226,51 @@ function removePhoto(i) {
   renderPhotos();
 }
 
+// Phone photos can be 5–10 MB. Shrinking them here first makes uploads fast on mobile data and
+// keeps each request well under the website's size limit when the panel is opened at the site's /admin.
+const MAX_EDGE = 2400;
+async function shrink(file) {
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close?.();
+    const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.88));
+    if (!blob) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch {
+    return file; // e.g. HEIC on a browser that can't read it: the server converts it instead
+  }
+}
+
 async function uploadPhotos(files) {
   const images = [...files].filter((f) => f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name));
   if (!images.length) return;
   const status = $("#upload-status");
-  status.textContent = `Uploading ${images.length} photo${images.length === 1 ? "" : "s"}…`;
-  const body = new FormData();
-  images.forEach((f) => body.append("photos", f));
+  const altBase = () => {
+    const name = $("#f-name").value.trim();
+    const colour = $("#f-colour").value.trim();
+    return name ? `${name}${colour ? ", " + colour : ""}` : "";
+  };
+  let done = 0;
   try {
-    const stored = await api("/api/admin/images", { method: "POST", body });
-    const altBase = $("#f-name").value.trim();
-    stored.forEach((s) => state.photos.push({ ...s, alt: altBase ? `${altBase}${$("#f-colour").value ? ", " + $("#f-colour").value : ""}` : "" }));
-    state.dirty = true;
-    renderPhotos();
-    status.textContent = "Uploaded. Remember to save.";
+    // One at a time, so a slow connection shows progress and one bad photo doesn't sink the rest.
+    for (const file of images) {
+      status.textContent = `Uploading photo ${done + 1} of ${images.length}…`;
+      const body = new FormData();
+      body.append("photos", await shrink(file));
+      const [stored] = await api("/api/admin/images", { method: "POST", body });
+      state.photos.push({ ...stored, alt: altBase() });
+      done++;
+      state.dirty = true;
+      renderPhotos();
+    }
+    status.textContent = `${done} photo${done === 1 ? "" : "s"} added. Remember to save.`;
   } catch (err) {
-    status.textContent = "";
+    status.textContent = done ? `${done} of ${images.length} added.` : "";
     toast(err.message, true);
   }
 }

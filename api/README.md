@@ -30,7 +30,9 @@ The website reads from it; the owner edits through the admin panel at `/admin`.
    `API_URL` = `https://veloura-api.onrender.com` and `REVALIDATE_SECRET` = the same value as on Render.
    Then redeploy the website.
 
-The admin panel is then at `https://veloura-api.onrender.com/admin`.
+The admin panel then opens at the website's own address, **`https://<your-site>.vercel.app/admin`**
+(the website passes `/admin` through to this service). It also still works directly at
+`https://veloura-api.onrender.com/admin`. Sign in with `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
 
 **Free plan note:** Render's free services sleep after 15 minutes without visits and take up to a minute
 to wake. Shoppers aren't affected (the website keeps its own copy of the catalogue), but the admin panel

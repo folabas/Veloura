@@ -28,7 +28,7 @@ API (e.g. `http://localhost:4000`). Without it, the site shows the built-in samp
 
 | What | Where |
 |---|---|
-| Products, prices, photos, categories | The admin panel (`<API address>/admin`) |
+| Products, prices, photos, categories | The admin panel at this site's `/admin` (served by the API; needs `API_URL`) |
 | Sample products used when no API is set | `src/lib/products.ts` |
 | Reading the catalogue from the API | `src/lib/catalog.ts` |
 | WhatsApp number, phone, Instagram and TikTok links | `src/lib/site.ts` |
