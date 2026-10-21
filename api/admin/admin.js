@@ -165,8 +165,26 @@ function renderProducts() {
   );
   const empty = $("#product-empty");
   empty.hidden = list.length > 0;
-  empty.textContent = state.products.length ? "No products match those filters." : "No products yet. Add your first one.";
+  empty.textContent = state.products.length ? "No products match those filters." : "No products yet. Add your first one, or load the starter products below.";
+  $("#starter").hidden = state.products.length > 0;
 }
+
+$("#load-starter").addEventListener("click", async (e) => {
+  const button = e.currentTarget;
+  button.disabled = true;
+  button.textContent = "Loading… this can take a minute";
+  try {
+    const r = await api("/api/admin/starter", { method: "POST" });
+    await Promise.all([loadCategories(), loadProducts()]);
+    renderProducts();
+    toast(`Added ${r.addedProducts} products and ${r.addedCategories} categories.`);
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Load starter products";
+  }
+});
 
 $("#search").addEventListener("input", renderProducts);
 $("#filter-category").addEventListener("change", renderProducts);

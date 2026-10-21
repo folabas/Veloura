@@ -109,7 +109,9 @@ textarea { resize: vertical; }
 .product-meta { padding: 12px 14px 14px; display: grid; gap: 2px; }
 .product-meta strong { font: 400 1.05rem/1.25 var(--display); }
 .product-meta .price { font-variant-numeric: tabular-nums; }
-.empty { text-align: center; padding: 60px 0; color: var(--taupe); }
+.empty { text-align: center; padding: 60px 0 24px; color: var(--taupe); }
+.starter { max-width: 520px; margin: 0 auto; display: grid; gap: 12px; justify-items: start; }
+.starter h3 { margin: 0; }
 
 /* Editor */
 .editor-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }

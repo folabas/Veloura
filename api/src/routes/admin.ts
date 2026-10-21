@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
@@ -6,6 +8,8 @@ import { categories, products, type ProductDoc } from "../db.js";
 import { credentialsMatch, endSession, isAdmin, requireAdmin, startSession } from "../lib/auth.js";
 import { deleteImage, imageUrl, storeImage } from "../lib/images.js";
 import { notifyWebsite } from "../lib/revalidate.js";
+import { loadStarter } from "../lib/starter.js";
+import { config } from "../config.js";
 import { categoryInput, firstIssue, productInput, slugify } from "../lib/validate.js";
 
 export const adminRoutes = Router();
@@ -215,6 +219,32 @@ adminRoutes.delete("/api/admin/products/:id", async (req, res) => {
   await Promise.all(existing.images.map((i) => deleteImage(i.id)));
   notifyWebsite();
   res.json({ ok: true });
+});
+
+// ---------- Starter products ----------
+
+// Photos for the starter products ship with the website. Read them from the repo checkout if it's
+// on disk (Render deploys the whole repo), otherwise download them from the live website.
+async function starterPhoto(file: string) {
+  try {
+    return await readFile(path.resolve(process.cwd(), "../web/public/images", file));
+  } catch {
+    if (!config.revalidateUrl) throw new Error("Starter photos not found. Set FRONTEND_REVALIDATE_URL so they can be fetched from the website.");
+    const res = await fetch(new URL(`/images/${file}`, config.revalidateUrl));
+    if (!res.ok) throw new Error(`Couldn't download ${file} from the website (${res.status}).`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+}
+
+adminRoutes.post("/api/admin/starter", async (_req, res) => {
+  try {
+    const result = await loadStarter(starterPhoto);
+    notifyWebsite();
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err instanceof Error ? err.message : "Couldn't load the starter products." });
+  }
 });
 
 // ---------- Photo uploads ----------
