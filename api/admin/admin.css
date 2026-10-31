@@ -17,6 +17,8 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
+/* Nothing in the panel should ever make the whole page slide sideways on a phone. */
+body { overflow-x: hidden; }
 body { background: var(--paper); color: var(--ink); font: 300 15px/1.6 var(--body); }
 [hidden] { display: none !important; }
 h1, h2, h3 { margin: 0; font-weight: 400; }
@@ -196,6 +198,17 @@ textarea { resize: vertical; }
   .category-row .slug, .category-row .n { display: none; }
   .topbar { gap: 16px; }
   .tag { display: none; }
+}
+/* Phones: logo and Sign out on the first line, the three sections as a full-width row of tabs
+   underneath, so nothing pushes the page wider than the screen. */
+@media (max-width: 640px) {
+  .topbar { flex-wrap: wrap; gap: 0 12px; padding-bottom: 0; }
+  .wordmark { font-size: 0.8rem; letter-spacing: 0.32em; }
+  #logout { margin-left: auto; }
+  .tabs { order: 3; flex: 1 0 100%; gap: 0; margin-top: 10px; border-top: 1px solid var(--line); }
+  .tabs a { flex: 1; text-align: center; padding: 12px 0 11px; border-bottom-width: 2px; }
+  .tabs a[aria-current="page"] { border-color: var(--clay); color: var(--clay); }
+  .view { padding-top: 24px; }
 }
 @media (max-width: 520px) {
   .row, .detail-row { grid-template-columns: 1fr; }
