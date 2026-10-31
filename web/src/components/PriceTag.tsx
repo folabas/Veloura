@@ -23,7 +23,8 @@ export function PriceTag({ product, countdown = false, className = "" }: { produ
   return (
     <span className={`price on-sale ${className}`} suppressHydrationWarning>
       <span className="price-now">{formatNaira(sale.price)}</span>{" "}
-      <s className="price-was" aria-label={`was ${formatNaira(product.price)}`}>{formatNaira(product.price)}</s>
+      <s className="price-was" aria-label={`was ${formatNaira(product.price)}`}>{formatNaira(product.price)}</s>{" "}
+      <span className="price-off">{sale.percent}% off</span>
       {countdown && <span className="price-ends">{endsIn(sale.endsAt, now)}</span>}
     </span>
   );

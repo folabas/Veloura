@@ -480,6 +480,8 @@ main { padding-top: var(--header-h); }
 .price.on-sale { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .price-now { color: var(--sale); }
 .price-was { color: var(--taupe); font-size: 0.88em; text-decoration-thickness: 1px; }
+.price-off { color: var(--sale); font-size: 0.82em; font-weight: 400; letter-spacing: 0.02em; }
+.tile .price-off { color: #f6c9bd; }
 .price-ends {
   flex-basis: 100%; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sale);
 }
