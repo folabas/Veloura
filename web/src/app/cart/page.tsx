@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { MAX_QUANTITY, useCart } from "@/components/CartProvider";
 import { useCatalog } from "@/components/CatalogProvider";
+import { PriceTag } from "@/components/PriceTag";
+import { priceNow } from "@/lib/pricing";
 import { formatNaira } from "@/lib/products";
 
 export default function CartPage() {
@@ -41,7 +43,7 @@ export default function CartPage() {
                     <Link className="card-name" href={`/shop/${p.slug}`}>
                       {p.name}, {p.colour}
                     </Link>
-                    <span className="muted price">{formatNaira(p.price)}</span>
+                    <PriceTag product={p} className="muted" />
                     <div className="qty" role="group" aria-label={`Quantity of ${p.name}`}>
                       <button type="button" aria-label="One fewer" onClick={() => setQuantity(p.slug, line.quantity - 1)}>
                         −
@@ -60,7 +62,7 @@ export default function CartPage() {
                       Remove
                     </button>
                   </div>
-                  <span className="price">{formatNaira(p.price * line.quantity)}</span>
+                  <span className="price">{formatNaira(priceNow(p) * line.quantity)}</span>
                 </div>
               );
             })}

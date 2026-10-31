@@ -7,7 +7,8 @@ import { Photo } from "@/components/Photo";
 import { RevealText } from "@/components/RevealText";
 import { collections } from "@/lib/collections";
 import { findCategory, getCatalog } from "@/lib/catalog";
-import { formatNaira, type Product } from "@/lib/products";
+import { PriceTag, SaleBadge } from "@/components/PriceTag";
+import type { Product } from "@/lib/products";
 
 const collage = [
   { src: "/images/polka-dot-white.webp", alt: "Model in the ivory polka dot scarf", speed: 0.1 },
@@ -178,6 +179,7 @@ export default async function Home() {
                     sizes="(max-width: 720px) 33vw, 17vw"
                     style={{ objectFit: "cover", objectPosition: p.images[0].focus ?? "50% 30%" }}
                   />
+                  <SaleBadge product={p} />
                   <span className="tile-info">
                     <span className="label">{findCategory(catalog, p.category)?.name}</span>
                     <span className="tile-name">
@@ -188,7 +190,7 @@ export default async function Home() {
                         </>
                       )}
                     </span>
-                    <span className="price">{formatNaira(p.price)}</span>
+                    <PriceTag product={p} />
                   </span>
                 </Link>
               ))}

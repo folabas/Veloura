@@ -11,7 +11,8 @@ import { RevealText } from "@/components/RevealText";
 import { ScrollDown } from "@/components/ScrollDown";
 import { collections, getCollection } from "@/lib/collections";
 import { findProduct, getCatalog } from "@/lib/catalog";
-import { formatNaira, type Product } from "@/lib/products";
+import { PriceTag } from "@/components/PriceTag";
+import type { Product } from "@/lib/products";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -75,7 +76,7 @@ export default async function CollectionPage({ params }: Props) {
                 <p className="card-name">{p.name}</p>
                 <p className="muted">{p.description}</p>
                 <Link className="arrow-link label" href={`/shop/${p.slug}`}>
-                  {formatNaira(p.price)} · Shop now
+                  <PriceTag product={p} /> · Shop now
                 </Link>
               </div>
             </div>

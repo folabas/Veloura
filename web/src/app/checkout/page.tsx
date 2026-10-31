@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { useCatalog } from "@/components/CatalogProvider";
+import { activeSale, priceNow } from "@/lib/pricing";
 import { formatNaira } from "@/lib/products";
 import { WHATSAPP_NUMBER, whatsappLink } from "@/lib/site";
 
@@ -29,7 +30,10 @@ export default function CheckoutPage() {
 
     const items = lines.flatMap((line) => {
       const p = getProduct(line.slug);
-      return p ? [`• ${p.name}, ${p.colour} × ${line.quantity} (${formatNaira(p.price * line.quantity)})`] : [];
+      if (!p) return [];
+      const sale = activeSale(p);
+      const name = p.colour ? `${p.name}, ${p.colour}` : p.name;
+      return [`• ${name} × ${line.quantity} (${formatNaira(priceNow(p) * line.quantity)}${sale ? `, ${sale.percent}% off` : ""})`];
     });
     const message = [
       "Hello Veloura, I'd like to order:",
@@ -119,7 +123,7 @@ export default function CheckoutPage() {
                 <span>
                   {p.name}, {p.colour} × {line.quantity}
                 </span>
-                <span className="price">{formatNaira(p.price * line.quantity)}</span>
+                <span className="price">{formatNaira(priceNow(p) * line.quantity)}</span>
               </div>
             ) : null;
           })}

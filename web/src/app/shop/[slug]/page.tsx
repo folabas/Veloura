@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { AddToBag } from "@/components/AddToBag";
 import { ProductCard } from "@/components/ProductCard";
 import { findCategory, findProduct, getCatalog } from "@/lib/catalog";
-import { formatNaira } from "@/lib/products";
+import { PriceTag, SaleBadge } from "@/components/PriceTag";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -41,6 +41,7 @@ export default async function ProductPage({ params }: Props) {
                 sizes="(max-width: 900px) 100vw, 55vw"
                 style={{ objectFit: "cover", objectPosition: img.focus ?? "50% 30%" }}
               />
+              {i === 0 && <SaleBadge product={product} />}
             </div>
           ))}
         </div>
@@ -59,7 +60,7 @@ export default async function ProductPage({ params }: Props) {
                 </>
               )}
             </h1>
-            <p className="price">{formatNaira(product.price)}</p>
+            <p className="product-price"><PriceTag product={product} countdown /></p>
           </div>
           <p className="desc">{product.description}</p>
           <AddToBag slug={product.slug} soldOut={product.soldOut} />

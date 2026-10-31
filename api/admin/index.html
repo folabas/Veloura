@@ -37,6 +37,7 @@
       <a class="brand" href="#products"><span class="logo" aria-hidden="true"></span><span class="wordmark">Veloura</span><span class="tag">Studio</span></a>
       <nav class="tabs" aria-label="Sections">
         <a href="#products" data-tab="products">Products</a>
+        <a href="#sales" data-tab="sales">Sales</a>
         <a href="#categories" data-tab="categories">Categories</a>
       </nav>
       <button id="logout" class="link-btn" type="button">Sign out</button>
@@ -59,6 +60,7 @@
           <option value="new">New in</option>
           <option value="soldout">Sold out</option>
           <option value="hidden">Hidden</option>
+          <option value="sale">On sale</option>
         </select>
       </div>
       <div id="product-grid" class="product-grid"></div>
@@ -117,6 +119,20 @@
               <p id="upload-status" class="hint" aria-live="polite"></p>
             </div>
 
+            <div class="panel sale-panel">
+              <h3>Sale</h3>
+              <label class="toggle"><input id="s-on" type="checkbox"><span>Put this item on sale</span></label>
+              <div id="sale-fields" hidden>
+                <div class="row">
+                  <label class="field"><span class="label">Discount (%)</span><input id="s-percent" type="number" inputmode="numeric" min="1" max="90" step="1" placeholder="20"></label>
+                  <div class="field"><span class="label">Sale price</span><p id="s-preview" class="sale-preview">—</p></div>
+                </div>
+                <label class="field"><span class="label">Starts</span><input id="s-start" type="datetime-local"></label>
+                <label class="field"><span class="label">Ends</span><input id="s-end" type="datetime-local"></label>
+                <p id="s-status" class="hint"></p>
+              </div>
+            </div>
+
             <div class="panel">
               <h3>On the website</h3>
               <label class="toggle"><input id="f-published" type="checkbox" checked><span>Visible on the site</span></label>
@@ -127,6 +143,59 @@
           </div>
         </div>
       </form>
+    </section>
+
+    <!-- Sales -->
+    <section id="view-sales" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <p class="label muted">Discounts</p>
+          <h2>Sales</h2>
+        </div>
+      </div>
+
+      <form id="sale-form" class="panel sale-builder">
+        <h3>Start a sale</h3>
+        <div class="sale-builder-fields">
+          <label class="field"><span class="label">Discount (%)</span><input id="b-percent" type="number" inputmode="numeric" min="1" max="90" step="1" placeholder="20" required></label>
+          <label class="field"><span class="label">Starts</span><input id="b-start" type="datetime-local" required></label>
+          <label class="field"><span class="label">Ends</span><input id="b-end" type="datetime-local" required></label>
+        </div>
+        <div class="quick-durations">
+          <span class="label muted">Quick length</span>
+          <button type="button" class="chip" data-days="1">24 hours</button>
+          <button type="button" class="chip" data-days="3">3 days</button>
+          <button type="button" class="chip" data-days="7">1 week</button>
+          <button type="button" class="chip" data-days="14">2 weeks</button>
+          <button type="button" class="chip" data-days="30">1 month</button>
+        </div>
+        <div class="field">
+          <div class="picker-head">
+            <span class="label">Products</span>
+            <span class="picker-tools">
+              <select id="b-category" aria-label="Select a whole category"></select>
+              <button type="button" class="link-btn" id="b-all">Select all</button>
+              <button type="button" class="link-btn" id="b-none">Clear</button>
+            </span>
+          </div>
+          <div id="b-products" class="picker"></div>
+        </div>
+        <div class="sale-builder-foot">
+          <p id="b-summary" class="hint">Choose products to discount.</p>
+          <button class="btn btn-clay" type="submit">Apply sale</button>
+        </div>
+      </form>
+
+      <div class="sale-lists">
+        <div>
+          <h3>Running now</h3>
+          <div id="sales-live" class="sale-list"></div>
+        </div>
+        <div>
+          <h3>Coming up</h3>
+          <div id="sales-soon" class="sale-list"></div>
+        </div>
+      </div>
     </section>
 
     <!-- Categories -->

@@ -18,6 +18,11 @@ export function toPublicProduct(p: ProductDoc) {
     images: p.images.map((img) => ({ src: imageUrl(img.id), alt: img.alt, focus: img.focus })),
     isNew: p.isNew,
     soldOut: p.soldOut,
+    // Sent while the sale is running or still to come, so the website can switch prices on and off
+    // at the exact moment without waiting for a refresh. Finished sales are left out.
+    sale: p.sale && p.sale.endsAt > new Date()
+      ? { percent: p.sale.percent, startsAt: p.sale.startsAt.toISOString(), endsAt: p.sale.endsAt.toISOString() }
+      : null,
   };
 }
 

@@ -4,6 +4,31 @@
 const $ = (sel) => document.querySelector(sel);
 const naira = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
 
+// ---------- Sale helpers ----------
+const salePrice = (price, percent) => Math.round((price * (100 - percent)) / 100);
+/** "live", "soon", "ended" or null (no sale). */
+function saleState(sale, now = Date.now()) {
+  if (!sale) return null;
+  const start = new Date(sale.startsAt).getTime();
+  const end = new Date(sale.endsAt).getTime();
+  if (now >= end) return "ended";
+  return now >= start ? "live" : "soon";
+}
+const when = new Intl.DateTimeFormat("en-NG", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const formatWhen = (iso) => when.format(new Date(iso));
+/** ISO date → value for <input type="datetime-local"> in the admin's own time zone. */
+function toLocalInput(iso) {
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+const fromLocalInput = (value) => (value ? new Date(value).toISOString() : "");
+const roundedNow = () => {
+  const d = new Date();
+  d.setSeconds(0, 0);
+  return d;
+};
+
 /** Tiny element builder; text always goes in via textContent, never as HTML. */
 function h(tag, props = {}, ...children) {
   const el = document.createElement(tag);
@@ -102,13 +127,17 @@ window.addEventListener("hashchange", () => {
 function route() {
   const hash = location.hash.replace(/^#/, "") || "products";
   const [view, id] = hash.split("/");
-  for (const v of ["products", "editor", "categories"]) $(`#view-${v}`).hidden = true;
+  for (const v of ["products", "editor", "sales", "categories"]) $(`#view-${v}`).hidden = true;
   document.querySelectorAll(".tabs a").forEach((a) => a.removeAttribute("aria-current"));
 
   if (view === "product") {
     openEditor(id === "new" ? null : id);
     $("#view-editor").hidden = false;
     document.querySelector('[data-tab="products"]').setAttribute("aria-current", "page");
+  } else if (view === "sales") {
+    renderSales();
+    $("#view-sales").hidden = false;
+    document.querySelector('[data-tab="sales"]').setAttribute("aria-current", "page");
   } else if (view === "categories") {
     renderCategories();
     $("#view-categories").hidden = false;
@@ -138,6 +167,7 @@ function renderProducts() {
     if (status === "new" && !p.isNew) return false;
     if (status === "soldout" && !p.soldOut) return false;
     if (status === "hidden" && p.published) return false;
+    if (status === "sale" && !["live", "soon"].includes(saleState(p.sale))) return false;
     return true;
   });
 
@@ -150,15 +180,22 @@ function renderProducts() {
           p.isNew && h("span", { class: "badge new", text: "New" }),
           p.soldOut && h("span", { class: "badge sold", text: "Sold out" }),
           !p.published && h("span", { class: "badge hidden", text: "Hidden" }),
+          saleState(p.sale) === "live" && h("span", { class: "badge sale", text: `−${p.sale.percent}%` }),
+          saleState(p.sale) === "soon" && h("span", { class: "badge soon", text: "Sale soon" }),
         ),
       );
+      const onSale = saleState(p.sale) === "live";
       if (p.images[0]) thumb.style.backgroundImage = `url("${p.images[0].url}")`;
       return h("button", { class: "product-card", type: "button", onclick: () => (location.hash = `product/${p.id}`) },
         thumb,
         h("div", { class: "product-meta" },
           h("span", { class: "label muted", text: categoryName(p.category) }),
           h("strong", { text: p.colour ? `${p.name}, ${p.colour}` : p.name }),
-          h("span", { class: "price", text: naira.format(p.price) }),
+          onSale
+            ? h("span", { class: "price" },
+                h("s", { class: "was", text: naira.format(p.price) }), " ",
+                h("span", { class: "now", text: naira.format(salePrice(p.price, p.sale.percent)) }))
+            : h("span", { class: "price", text: naira.format(p.price) }),
         ),
       );
     }),
@@ -354,9 +391,59 @@ async function openEditor(id) {
   $("#delete-product").hidden = !p;
   $("#upload-status").textContent = "";
   renderPhotos();
+  fillSale(p?.sale && saleState(p.sale) !== "ended" ? p.sale : null);
   state.dirty = false;
 
   if (!state.categories.length) toast("Add a category first, under Categories.", true);
+}
+
+// ---------- Sale panel in the editor ----------
+function fillSale(sale) {
+  $("#s-on").checked = Boolean(sale);
+  $("#sale-fields").hidden = !sale;
+  const start = sale ? sale.startsAt : roundedNow().toISOString();
+  const end = sale ? sale.endsAt : new Date(roundedNow().getTime() + 7 * 864e5).toISOString();
+  $("#s-percent").value = sale?.percent ?? "";
+  $("#s-start").value = toLocalInput(start);
+  $("#s-end").value = toLocalInput(end);
+  updateSalePreview();
+}
+
+function updateSalePreview() {
+  const price = Number($("#f-price").value);
+  const percent = Number($("#s-percent").value);
+  $("#s-preview").textContent =
+    price > 0 && percent >= 1 && percent <= 90 ? `${naira.format(salePrice(price, percent))}  (was ${naira.format(price)})` : "—";
+  const sale = { startsAt: fromLocalInput($("#s-start").value), endsAt: fromLocalInput($("#s-end").value) };
+  const status = $("#s-status");
+  if (!$("#s-on").checked || !sale.startsAt || !sale.endsAt) status.textContent = "";
+  else if (new Date(sale.endsAt) <= new Date(sale.startsAt)) status.textContent = "The end must be after the start.";
+  else {
+    const s = saleState(sale);
+    status.textContent =
+      s === "live" ? `On sale now, until ${formatWhen(sale.endsAt)}.` :
+      s === "soon" ? `Starts ${formatWhen(sale.startsAt)}, ends ${formatWhen(sale.endsAt)}.` :
+      "Those dates are in the past, so the sale won't show.";
+  }
+}
+
+$("#s-on").addEventListener("change", (e) => {
+  $("#sale-fields").hidden = !e.target.checked;
+  if (e.target.checked && !$("#s-percent").value) $("#s-percent").focus();
+  updateSalePreview();
+});
+["#s-percent", "#s-start", "#s-end", "#f-price"].forEach((sel) => $(sel).addEventListener("input", updateSalePreview));
+
+/** The sale to save, null for none, or an error message string. */
+function readSale() {
+  if (!$("#s-on").checked) return null;
+  const percent = Number($("#s-percent").value);
+  if (!Number.isInteger(percent) || percent < 1 || percent > 90) return "Set a sale discount between 1% and 90%.";
+  const startsAt = fromLocalInput($("#s-start").value);
+  const endsAt = fromLocalInput($("#s-end").value);
+  if (!startsAt || !endsAt) return "Choose when the sale starts and ends.";
+  if (new Date(endsAt) <= new Date(startsAt)) return "The sale must end after it starts.";
+  return { percent, startsAt, endsAt };
 }
 
 $("#product-form").addEventListener("input", () => (state.dirty = true));
@@ -368,6 +455,8 @@ $("#product-form").addEventListener("submit", async (e) => {
   if (!name) return toast("Give the product a name.", true);
   if (price === "" || Number(price) < 0) return toast("Add a price in naira.", true);
   if (!$("#f-category").value) return toast("Choose a category. Add one under Categories first.", true);
+  const sale = readSale();
+  if (typeof sale === "string") return toast(sale, true);
 
   const details = [...$("#details").children]
     .map((row) => {
@@ -388,6 +477,7 @@ $("#product-form").addEventListener("submit", async (e) => {
     isNew: $("#f-new").checked,
     soldOut: $("#f-soldout").checked,
     published: $("#f-published").checked,
+    sale,
     ...($("#f-slug").value.trim() ? { slug: $("#f-slug").value.trim() } : {}),
   };
 
@@ -420,6 +510,129 @@ $("#delete-product").addEventListener("click", async () => {
     location.hash = "products";
   } catch (err) {
     toast(err.message, true);
+  }
+});
+
+// ---------- Sales tab ----------
+const picked = new Set();
+
+function renderSales() {
+  // Defaults: starts now, runs a week.
+  if (!$("#b-start").value) $("#b-start").value = toLocalInput(roundedNow().toISOString());
+  if (!$("#b-end").value) $("#b-end").value = toLocalInput(new Date(roundedNow().getTime() + 7 * 864e5).toISOString());
+
+  const catSelect = $("#b-category");
+  catSelect.replaceChildren(
+    h("option", { value: "", text: "Select a category…" }),
+    ...state.categories.map((c) => h("option", { value: c.slug, text: `All ${c.name}` })),
+  );
+
+  const percent = Number($("#b-percent").value);
+  $("#b-products").replaceChildren(
+    ...state.products.map((p) => {
+      const s = saleState(p.sale);
+      const box = h("input", {
+        type: "checkbox",
+        checked: picked.has(p.id),
+        onchange: (e) => {
+          e.target.checked ? picked.add(p.id) : picked.delete(p.id);
+          updateSaleSummary();
+        },
+      });
+      const thumb = h("span", { class: "pick-thumb" });
+      if (p.images[0]) thumb.style.backgroundImage = `url("${p.images[0].url}")`;
+      return h("label", { class: "pick" },
+        box,
+        thumb,
+        h("span", { class: "pick-name", text: p.colour ? `${p.name}, ${p.colour}` : p.name }),
+        h("span", { class: "pick-price muted",
+          text: percent >= 1 && percent <= 90 ? `${naira.format(p.price)} → ${naira.format(salePrice(p.price, percent))}` : naira.format(p.price) }),
+        s === "live" && h("span", { class: "badge sale", text: `−${p.sale.percent}% now` }),
+        s === "soon" && h("span", { class: "badge soon", text: "Sale soon" }),
+      );
+    }),
+  );
+  updateSaleSummary();
+  renderSaleLists();
+}
+
+function updateSaleSummary() {
+  const n = picked.size;
+  const percent = Number($("#b-percent").value);
+  $("#b-summary").textContent = n
+    ? `${n} product${n === 1 ? "" : "s"} selected${percent ? `, ${percent}% off` : ""}.` +
+      (state.products.some((p) => picked.has(p.id) && ["live", "soon"].includes(saleState(p.sale))) ? " This replaces any sale they already have." : "")
+    : "Choose products to discount.";
+}
+
+function renderSaleLists() {
+  const withSale = state.products.filter((p) => ["live", "soon"].includes(saleState(p.sale)));
+  const row = (p) =>
+    h("div", { class: "sale-row" },
+      h("span", { class: "sale-row-name", text: p.colour ? `${p.name}, ${p.colour}` : p.name }),
+      h("span", { class: "badge sale", text: `−${p.sale.percent}%` }),
+      h("span", { class: "price" },
+        h("s", { class: "was", text: naira.format(p.price) }), " ",
+        h("span", { class: "now", text: naira.format(salePrice(p.price, p.sale.percent)) })),
+      h("span", { class: "muted sale-row-when",
+        text: saleState(p.sale) === "live" ? `Ends ${formatWhen(p.sale.endsAt)}` : `${formatWhen(p.sale.startsAt)} – ${formatWhen(p.sale.endsAt)}` }),
+      h("button", {
+        class: "btn btn-line danger", type: "button", text: saleState(p.sale) === "live" ? "End now" : "Cancel",
+        onclick: async () => {
+          try {
+            await api("/api/admin/sales/end", { method: "POST", body: JSON.stringify({ productIds: [p.id] }) });
+            await loadProducts();
+            renderSales();
+            toast("Sale ended.");
+          } catch (err) { toast(err.message, true); }
+        },
+      }),
+    );
+  const live = withSale.filter((p) => saleState(p.sale) === "live");
+  const soon = withSale.filter((p) => saleState(p.sale) === "soon");
+  $("#sales-live").replaceChildren(...(live.length ? live.map(row) : [h("p", { class: "muted", text: "No sales running." })]));
+  $("#sales-soon").replaceChildren(...(soon.length ? soon.map(row) : [h("p", { class: "muted", text: "Nothing scheduled." })]));
+}
+
+$("#b-percent").addEventListener("input", renderSales);
+$("#b-all").addEventListener("click", () => { state.products.forEach((p) => picked.add(p.id)); renderSales(); });
+$("#b-none").addEventListener("click", () => { picked.clear(); renderSales(); });
+$("#b-category").addEventListener("change", (e) => {
+  state.products.filter((p) => p.category === e.target.value).forEach((p) => picked.add(p.id));
+  e.target.value = "";
+  renderSales();
+});
+document.querySelectorAll(".chip[data-days]").forEach((chip) =>
+  chip.addEventListener("click", () => {
+    const start = $("#b-start").value ? new Date($("#b-start").value) : roundedNow();
+    $("#b-end").value = toLocalInput(new Date(start.getTime() + Number(chip.dataset.days) * 864e5).toISOString());
+  }),
+);
+
+$("#sale-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const percent = Number($("#b-percent").value);
+  const startsAt = fromLocalInput($("#b-start").value);
+  const endsAt = fromLocalInput($("#b-end").value);
+  if (!picked.size) return toast("Choose at least one product.", true);
+  if (!Number.isInteger(percent) || percent < 1 || percent > 90) return toast("Set a discount between 1% and 90%.", true);
+  if (!startsAt || !endsAt || new Date(endsAt) <= new Date(startsAt)) return toast("The sale must end after it starts.", true);
+  if (new Date(endsAt) <= new Date()) return toast("That end time has already passed.", true);
+  const button = e.submitter;
+  button.disabled = true;
+  try {
+    const r = await api("/api/admin/sales", {
+      method: "POST",
+      body: JSON.stringify({ productIds: [...picked], sale: { percent, startsAt, endsAt } }),
+    });
+    picked.clear();
+    await loadProducts();
+    renderSales();
+    toast(`${percent}% off applied to ${r.updated} product${r.updated === 1 ? "" : "s"}.`);
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    button.disabled = false;
   }
 });
 

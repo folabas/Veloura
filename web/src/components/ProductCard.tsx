@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCatalog } from "./CatalogProvider";
-import { formatNaira, type Product } from "@/lib/products";
+import { PriceTag, SaleBadge } from "./PriceTag";
+import type { Product } from "@/lib/products";
 
 export function ProductCard({ product }: { product: Product }) {
   const { getCategory } = useCatalog();
@@ -20,6 +21,7 @@ export function ProductCard({ product }: { product: Product }) {
             style={{ objectFit: "cover", objectPosition: image.focus ?? "50% 30%" }}
           />
         )}
+        <SaleBadge product={product} />
       </div>
       <div className="card-meta">
         <span className="label muted">{getCategory(product.category)?.name}</span>
@@ -27,7 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
           {product.name}
           {product.colour && `, ${product.colour}`}
         </span>
-        <span className="price">{product.soldOut ? "Sold out" : formatNaira(product.price)}</span>
+        <PriceTag product={product} />
       </div>
     </Link>
   );

@@ -10,7 +10,7 @@ import { deleteImage, imageUrl, storeImage } from "../lib/images.js";
 import { notifyWebsite } from "../lib/revalidate.js";
 import { loadStarter } from "../lib/starter.js";
 import { config } from "../config.js";
-import { categoryInput, firstIssue, productInput, slugify } from "../lib/validate.js";
+import { bulkEndInput, bulkSaleInput, categoryInput, firstIssue, productInput, slugify } from "../lib/validate.js";
 
 export const adminRoutes = Router();
 
@@ -219,6 +219,37 @@ adminRoutes.delete("/api/admin/products/:id", async (req, res) => {
   await Promise.all(existing.images.map((i) => deleteImage(i.id)));
   notifyWebsite();
   res.json({ ok: true });
+});
+
+// ---------- Sales (many products at once) ----------
+
+adminRoutes.post("/api/admin/sales", async (req, res) => {
+  const parsed = bulkSaleInput.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: firstIssue(parsed.error) });
+    return;
+  }
+  const { productIds, sale } = parsed.data;
+  const r = await products.updateMany(
+    { _id: { $in: productIds.map((id) => new ObjectId(id)) } },
+    { $set: { sale, updatedAt: new Date() } },
+  );
+  notifyWebsite();
+  res.json({ updated: r.modifiedCount });
+});
+
+adminRoutes.post("/api/admin/sales/end", async (req, res) => {
+  const parsed = bulkEndInput.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: firstIssue(parsed.error) });
+    return;
+  }
+  const r = await products.updateMany(
+    { _id: { $in: parsed.data.productIds.map((id) => new ObjectId(id)) } },
+    { $set: { sale: null, updatedAt: new Date() } },
+  );
+  notifyWebsite();
+  res.json({ updated: r.modifiedCount });
 });
 
 // ---------- Starter products ----------

@@ -21,6 +21,8 @@ export type Product = {
   images: { src: string; alt: string; focus?: string }[];
   isNew?: boolean;
   soldOut?: boolean;
+  /** Timed discount from the admin panel; only applies between startsAt and endsAt. */
+  sale?: { percent: number; startsAt: string; endsAt: string } | null;
 };
 
 export const sampleProducts: Product[] = [

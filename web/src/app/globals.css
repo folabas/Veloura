@@ -13,6 +13,7 @@
   --taupe: #7b6a5d;
   --line: rgba(42, 31, 25, 0.16);
   --error: #9b2c1f;
+  --sale: #8f2f2a;        /* deep rose-brick for sale prices and badges; reads as warm, not alarm-red */
 
   --step-0: 0.95rem;
   --step-label: 0.7rem;
@@ -475,6 +476,24 @@ main { padding-top: var(--header-h); }
   gap: clamp(28px, 5vw, 80px); padding-block: clamp(28px, 4vw, 56px) clamp(64px, 8vw, 110px);
 }
 .product-gallery { display: grid; gap: 14px; }
+/* Sale pricing */
+.price.on-sale { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.price-now { color: var(--sale); }
+.price-was { color: var(--taupe); font-size: 0.88em; text-decoration-thickness: 1px; }
+.price-ends {
+  flex-basis: 100%; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sale);
+}
+.product-price { font-size: 1.2rem; margin: 0; }
+.product-price .price-now { font-size: 1.35rem; }
+.sale-badge {
+  position: absolute; left: 10px; top: 10px; z-index: 2;
+  background: var(--sale); color: #fff; padding: 4px 9px;
+  font: 500 0.72rem/1 var(--body); letter-spacing: 0.08em;
+}
+.tile .price-now { color: #f6c9bd; }
+.tile .price-was { color: rgba(255, 255, 255, 0.7); }
+.cats a.cat-sale { color: var(--sale); }
+
 .product-photo { position: relative; aspect-ratio: 3 / 4; max-width: 100%; overflow: hidden; background: var(--sand); }
 .product-info {
   position: sticky; top: calc(var(--header-h) + 32px + env(safe-area-inset-top, 0px));

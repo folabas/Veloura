@@ -21,6 +21,17 @@ export const categoryInput = z.object({
   order: z.coerce.number().int().min(0).max(999).default(0),
 });
 
+/** A timed discount: percent off between two moments (ISO dates from the admin's browser). */
+export const saleInput = z
+  .object({
+    percent: z.coerce.number().int("Use a whole-number percentage").min(1, "The discount must be at least 1%").max(90, "The discount can be at most 90%"),
+    startsAt: z.coerce.date({ message: "Choose when the sale starts" }),
+    endsAt: z.coerce.date({ message: "Choose when the sale ends" }),
+  })
+  .refine((s) => s.endsAt > s.startsAt, { message: "The sale must end after it starts", path: ["endsAt"] });
+
+export type SaleInput = z.infer<typeof saleInput>;
+
 export const productInput = z.object({
   name: z.string().trim().min(1, "Give the product a name").max(120),
   slug: slug.optional(),
@@ -49,6 +60,17 @@ export const productInput = z.object({
   soldOut: z.boolean().default(false),
   published: z.boolean().default(true),
   order: z.coerce.number().int().min(0).max(9999).default(0),
+  sale: saleInput.nullable().default(null),
+});
+
+/** Apply one sale to many products at once (the Sales tab). */
+export const bulkSaleInput = z.object({
+  productIds: z.array(z.string().regex(/^[a-f0-9]{24}$/)).min(1, "Choose at least one product").max(500),
+  sale: saleInput,
+});
+
+export const bulkEndInput = z.object({
+  productIds: z.array(z.string().regex(/^[a-f0-9]{24}$/)).min(1, "Choose at least one product").max(500),
 });
 
 export type ProductInput = z.infer<typeof productInput>;

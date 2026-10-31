@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useCatalog } from "./CatalogProvider";
+import { priceNow } from "@/lib/pricing";
 
 export type CartLine = { slug: string; quantity: number };
 
@@ -70,7 +71,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => {
     const count = lines.reduce((n, l) => n + l.quantity, 0);
-    const subtotal = lines.reduce((sum, l) => sum + (getProduct(l.slug)?.price ?? 0) * l.quantity, 0);
+    const subtotal = lines.reduce((sum, l) => sum + (getProduct(l.slug) ? priceNow(getProduct(l.slug)!) : 0) * l.quantity, 0);
     return { lines, count, subtotal, ready, add, setQuantity, remove, clear };
   }, [lines, ready, add, setQuantity, remove, clear, getProduct]);
 

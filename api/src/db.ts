@@ -10,6 +10,9 @@ export type CategoryDoc = {
 
 export type ProductImage = { id: string; alt: string; focus?: string };
 
+/** Percent off between two moments. Only applies while now is inside the window. */
+export type ProductSale = { percent: number; startsAt: Date; endsAt: Date };
+
 export type ProductDoc = {
   _id?: ObjectId;
   slug: string;
@@ -25,6 +28,7 @@ export type ProductDoc = {
   soldOut: boolean;
   published: boolean;
   order: number;
+  sale?: ProductSale | null;
   createdAt: Date;
   updatedAt: Date;
 };
