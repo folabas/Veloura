@@ -46,8 +46,13 @@ app.use(publicRoutes);
 app.use(adminRoutes);
 
 // /admin and /admin/ both open the panel (the website forwards /admin here without a trailing slash).
-app.get(["/admin", "/admin/"], (_req, res) => res.sendFile(path.join(adminDir, "index.html")));
-app.use("/admin", express.static(adminDir, { redirect: false, maxAge: config.isProduction ? "1h" : 0 }));
+app.get(["/admin", "/admin/"], (_req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.sendFile(path.join(adminDir, "index.html"));
+});
+// No long caching for the panel's files: browsers check for a newer version on every visit
+// (a quick "not modified" when nothing changed), so updates show up straight away on phones too.
+app.use("/admin", express.static(adminDir, { redirect: false, maxAge: 0, etag: true, lastModified: true }));
 app.get("/", (_req, res) => res.redirect("/admin"));
 
 const onError: ErrorRequestHandler = (err, _req, res, _next) => {

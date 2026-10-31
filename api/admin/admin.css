@@ -17,8 +17,14 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
-/* Nothing in the panel should ever make the whole page slide sideways on a phone. */
-body { overflow-x: hidden; }
+/* Nothing in the panel should ever make the whole page slide sideways on a phone.
+   iPhone Safari ignores overflow-x on body alone, so it's set on both, with `clip` where supported. */
+html { overflow-x: hidden; }
+@supports (overflow: clip) {
+  /* `clip` doesn't turn the page into a separate scroll area, so the sticky header keeps working. */
+  html, body { overflow-x: clip; }
+}
+img, input, select, textarea { max-width: 100%; }
 body { background: var(--paper); color: var(--ink); font: 300 15px/1.6 var(--body); }
 [hidden] { display: none !important; }
 h1, h2, h3 { margin: 0; font-weight: 400; }
