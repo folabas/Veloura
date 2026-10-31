@@ -8,6 +8,7 @@ import { ImageCursor } from "@/components/ImageCursor";
 import { Motion } from "@/components/Motion";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SaleBanner } from "@/components/SaleBanner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Splash, splashBootScript } from "@/components/Splash";
 
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <Splash />
         <CatalogProvider catalog={catalog}>
           <CartProvider>
+            <SaleBanner />
             <SiteHeader />
             <main>{children}</main>
             <SiteFooter categories={catalog.categories} />
