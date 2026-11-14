@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bodoni_Moda, Jost } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
 import { CatalogProvider } from "@/components/CatalogProvider";
@@ -12,17 +12,23 @@ import { SaleBanner } from "@/components/SaleBanner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Splash, splashBootScript } from "@/components/Splash";
 
-const display = Bodoni_Moda({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  weight: ["400", "500"],
+// Fonts ship with the site (src/fonts) instead of being downloaded from Google at build time,
+// so a change on Google's side can't break a deploy. Both are variable fonts covering every weight.
+const display = localFont({
+  src: [
+    { path: "../fonts/bodoni-moda-latin-normal.woff2", weight: "400 900", style: "normal" },
+    { path: "../fonts/bodoni-moda-latin-italic.woff2", weight: "400 900", style: "italic" },
+  ],
   variable: "--font-display",
+  display: "swap",
+  fallback: ["Didot", "Bodoni 72", "Georgia", "serif"],
 });
 
-const body = Jost({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
+const body = localFont({
+  src: [{ path: "../fonts/jost-latin.woff2", weight: "100 900", style: "normal" }],
   variable: "--font-body",
+  display: "swap",
+  fallback: ["Futura", "Century Gothic", "system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
