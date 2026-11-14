@@ -2,6 +2,7 @@ import { Router, type Request } from "express";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { ObjectId } from "mongodb";
+import sharp from "sharp";
 import { config } from "../config.js";
 import { images, requests, type RequestDoc } from "../db.js";
 import { requireAdmin } from "../lib/auth.js";
@@ -132,6 +133,21 @@ requestRoutes.get("/api/admin/requests/:id/photos/:photoId", async (req, res) =>
   const r = await requests.findOne({ _id: new ObjectId(id), photos: photoId });
   if (!r) {
     res.status(404).end();
+    return;
+  }
+  // ?download=1 saves it as a JPEG (opens anywhere, unlike WebP on some phones), named after the request.
+  if (req.query.download) {
+    const chunks: Buffer[] = [];
+    for await (const chunk of images.openDownloadStream(new ObjectId(photoId))) chunks.push(chunk as Buffer);
+    const jpeg = await sharp(Buffer.concat(chunks)).jpeg({ quality: 92 }).toBuffer();
+    const ref = id.slice(-6).toUpperCase();
+    const n = r.photos.indexOf(photoId) + 1;
+    res.set({
+      "Content-Type": "image/jpeg",
+      "Content-Disposition": `attachment; filename="veloura-request-${ref}-${n}.jpg"`,
+      "Cache-Control": "private, no-store",
+    });
+    res.send(jpeg);
     return;
   }
   res.set({ "Content-Type": "image/webp", "Cache-Control": "private, max-age=86400" });

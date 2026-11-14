@@ -109,6 +109,16 @@ export function CustomOrderForm() {
     }
   }
 
+  // Back to an empty form for the next request (the form remounts, so every field starts blank).
+  function startOver() {
+    photos.forEach((p) => URL.revokeObjectURL(p.preview));
+    setPhotos([]);
+    setItemType("");
+    setError("");
+    setResult(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   if (result) {
     return (
       <div className="custom-done" role="status">
@@ -128,6 +138,9 @@ export function CustomOrderForm() {
         {photos.some((p) => p.id) && (
           <p className="muted">Your photos are already with us, so you don&apos;t need to send them again.</p>
         )}
+        <button type="button" className="arrow-link label" onClick={startOver}>
+          Request another piece
+        </button>
       </div>
     );
   }

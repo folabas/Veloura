@@ -155,7 +155,14 @@ function renderRequests() {
                 .flatMap(([k, v]) => [h("dt", { text: k }), h("dd", { text: v })]),
             ),
             r.photos.length > 0 && h("div", { class: "request-photos" },
-              ...r.photos.map((p) => h("a", { href: p.url, target: "_blank", rel: "noopener" }, h("img", { src: p.url, alt: "Reference photo", loading: "lazy" })))),
+              ...r.photos.map((p, i) =>
+                h("button", { class: "request-photo", type: "button", "aria-label": `Preview photo ${i + 1}`, onclick: () => openLightbox(r.photos, i) },
+                  h("img", { src: p.url, alt: `Reference photo ${i + 1}`, loading: "lazy" }))),
+              r.photos.length > 1 && h("button", {
+                class: "link-btn", type: "button", text: `Download all ${r.photos.length}`,
+                onclick: () => r.photos.forEach((p, i) => setTimeout(() => downloadPhoto(p.url), i * 400)),
+              }),
+            ),
             notes,
             h("div", { class: "request-actions" },
               h("a", { class: "btn btn-clay", href: `https://wa.me/${r.whatsapp}?text=${encodeURIComponent(greeting)}`, target: "_blank", rel: "noopener", text: "Reply on WhatsApp" }),
@@ -176,6 +183,70 @@ function renderRequests() {
 }
 
 $("#request-filter").addEventListener("change", renderRequests);
+
+// ---------- Photo preview (lightbox) ----------
+const lightbox = { photos: [], index: 0, returnFocus: null };
+const downloadUrl = (url) => `${url}?download=1`;
+
+function downloadPhoto(url) {
+  const a = h("a", { href: downloadUrl(url), download: "" });
+  document.body.append(a);
+  a.click();
+  a.remove();
+}
+
+function showLightboxPhoto() {
+  const { photos, index } = lightbox;
+  $("#lb-img").src = photos[index].url;
+  $("#lb-img").alt = `Reference photo ${index + 1} of ${photos.length}`;
+  $("#lb-count").textContent = photos.length > 1 ? `${index + 1} of ${photos.length}` : "";
+  $("#lb-download").href = downloadUrl(photos[index].url);
+  $("#lb-prev").hidden = $("#lb-next").hidden = photos.length < 2;
+}
+
+function openLightbox(photos, index) {
+  lightbox.photos = photos;
+  lightbox.index = index;
+  lightbox.returnFocus = document.activeElement;
+  showLightboxPhoto();
+  $("#lightbox").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("#lb-close").focus();
+}
+
+function closeLightbox() {
+  $("#lightbox").hidden = true;
+  $("#lb-img").removeAttribute("src");
+  document.body.style.overflow = "";
+  lightbox.returnFocus?.focus?.();
+}
+
+function stepLightbox(dir) {
+  const n = lightbox.photos.length;
+  lightbox.index = (lightbox.index + dir + n) % n;
+  showLightboxPhoto();
+}
+
+$("#lb-close").addEventListener("click", closeLightbox);
+$("#lb-prev").addEventListener("click", () => stepLightbox(-1));
+$("#lb-next").addEventListener("click", () => stepLightbox(1));
+// Clicking the dark background (not the photo or buttons) closes it.
+$("#lightbox").addEventListener("click", (e) => { if (e.target.id === "lightbox") closeLightbox(); });
+document.addEventListener("keydown", (e) => {
+  if ($("#lightbox").hidden) return;
+  if (e.key === "Escape") closeLightbox();
+  else if (e.key === "ArrowLeft") stepLightbox(-1);
+  else if (e.key === "ArrowRight") stepLightbox(1);
+});
+// Swipe left/right on phones.
+let touchX = null;
+$("#lightbox").addEventListener("touchstart", (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+$("#lightbox").addEventListener("touchend", (e) => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50 && lightbox.photos.length > 1) stepLightbox(dx < 0 ? 1 : -1);
+  touchX = null;
+});
 
 // ---------- Routing (#products, #categories, #product/<id>, #product/new) ----------
 let currentHash = location.hash;
