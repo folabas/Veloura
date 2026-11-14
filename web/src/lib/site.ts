@@ -2,10 +2,10 @@
 
 // The WhatsApp number orders are sent to, in international format with no "+",
 // spaces or leading zero. Ordering is switched off while this is empty.
-export const WHATSAPP_NUMBER: string = "2349018490782";
+export const WHATSAPP_NUMBER: string = "2347070272426";
 
-export const PHONE_DISPLAY = "0901 849 0782";
-export const PHONE_TEL = "+2349018490782";
+export const PHONE_DISPLAY = "0707 027 2426";
+export const PHONE_TEL = "+2347070272426";
 
 export const socials = [
   { name: "Instagram", handle: "@_veloura.ng", href: "https://www.instagram.com/_veloura.ng" },
