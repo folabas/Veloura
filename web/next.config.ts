@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
       { source: "/admin", destination: `${origin}/admin` },
       { source: "/admin/:path*", destination: `${origin}/admin/:path*` },
       { source: "/api/admin/:path*", destination: `${origin}/api/admin/:path*` },
+      // Custom-order requests and their photos go to the API through the site's own address.
+      { source: "/api/requests", destination: `${origin}/api/requests` },
+      { source: "/api/requests/:path*", destination: `${origin}/api/requests/:path*` },
     ];
   },
   experimental: {

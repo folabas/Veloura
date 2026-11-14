@@ -73,6 +73,37 @@ export const bulkEndInput = z.object({
   productIds: z.array(z.string().regex(/^[a-f0-9]{24}$/)).min(1, "Choose at least one product").max(500),
 });
 
+/** A customer's custom-order request from the website. */
+export const requestInput = z.object({
+  name: z.string().trim().min(2, "Tell us your name").max(80),
+  phone: z
+    .string()
+    .trim()
+    .min(7, "Add your WhatsApp number so we can reply")
+    .max(30)
+    .regex(/^[+\d][\d\s().-]{6,}$/, "That doesn't look like a phone number"),
+  itemType: z.string().trim().min(1, "Choose what you'd like made").max(60),
+  description: z.string().trim().min(10, "Describe what you'd like in a sentence or two").max(2000),
+  measurements: z.string().trim().max(500).default(""),
+  budget: z.string().trim().max(60).default(""),
+  neededBy: z.string().trim().max(40).default(""),
+  photos: z.array(z.string().regex(/^[a-f0-9]{24}$/)).max(5, "You can add up to 5 photos").default([]),
+  // Hidden field real people leave empty; simple bots fill it in.
+  website: z.string().max(0).optional(),
+});
+
+export const requestUpdateInput = z.object({
+  status: z.enum(["new", "in-progress", "done"]).optional(),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+/** Turns a Nigerian or international number into digits for wa.me links (080… → 23480…). */
+export function toWhatsAppDigits(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("0") && digits.length === 11) return `234${digits.slice(1)}`;
+  return digits;
+}
+
 export type ProductInput = z.infer<typeof productInput>;
 
 /** First validation message, phrased for the admin panel. */

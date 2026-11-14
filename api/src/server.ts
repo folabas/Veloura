@@ -8,6 +8,7 @@ import { checkServerSecrets, config } from "./config.js";
 import { connect } from "./db.js";
 import { adminRoutes } from "./routes/admin.js";
 import { publicRoutes } from "./routes/public.js";
+import { requestRoutes } from "./routes/requests.js";
 
 checkServerSecrets();
 
@@ -43,6 +44,7 @@ app.get("/healthz", (_req, res) => {
 // The website (any origin) may read the public catalogue; nothing else is shared cross-site.
 app.use(["/api/catalog", "/api/products"], cors({ methods: ["GET"] }));
 app.use(publicRoutes);
+app.use(requestRoutes);
 app.use(adminRoutes);
 
 // /admin and /admin/ both open the panel (the website forwards /admin here without a trailing slash).

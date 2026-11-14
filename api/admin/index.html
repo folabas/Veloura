@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Jost:wght@300;400;500&display=swap">
-  <link rel="stylesheet" href="/admin/admin.css?v=3">
+  <link rel="stylesheet" href="/admin/admin.css?v=4">
 </head>
 <body>
   <!-- Sign in -->
@@ -38,6 +38,7 @@
       <nav class="tabs" aria-label="Sections">
         <a href="#products" data-tab="products">Products</a>
         <a href="#sales" data-tab="sales">Sales</a>
+        <a href="#requests" data-tab="requests">Requests <span id="new-requests" class="tab-count" hidden></span></a>
         <a href="#categories" data-tab="categories">Categories</a>
       </nav>
       <button id="logout" class="link-btn" type="button">Sign out</button>
@@ -198,6 +199,25 @@
       </div>
     </section>
 
+    <!-- Custom-order requests -->
+    <section id="view-requests" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <p class="label muted">Custom orders</p>
+          <h2>Requests</h2>
+        </div>
+        <select id="request-filter" aria-label="Show requests">
+          <option value="open">New and in progress</option>
+          <option value="new">New</option>
+          <option value="in-progress">In progress</option>
+          <option value="done">Done</option>
+          <option value="">All</option>
+        </select>
+      </div>
+      <p class="hint request-intro">Every custom-order request from the website lands here, with the customer's photos, even if they never press send in WhatsApp.</p>
+      <div id="request-list" class="request-list"></div>
+    </section>
+
     <!-- Categories -->
     <section id="view-categories" class="view" hidden>
       <div class="view-head">
@@ -216,6 +236,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="/admin/admin.js?v=3" defer></script>
+  <script src="/admin/admin.js?v=4" defer></script>
 </body>
 </html>

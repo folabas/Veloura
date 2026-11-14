@@ -102,9 +102,80 @@ $("#logout").addEventListener("click", async () => {
 async function startApp() {
   $("#login").hidden = true;
   $("#app").hidden = false;
-  await Promise.all([loadCategories(), loadProducts()]);
+  await Promise.all([loadCategories(), loadProducts(), loadRequests().catch(() => {})]);
   route();
 }
+
+// ---------- Custom-order requests ----------
+const statusLabels = { new: "New", "in-progress": "In progress", done: "Done" };
+const dateTime = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+
+async function loadRequests() {
+  state.requests = await api("/api/admin/requests");
+  const fresh = state.requests.filter((r) => r.status === "new").length;
+  $("#new-requests").hidden = !fresh;
+  $("#new-requests").textContent = fresh;
+}
+
+function renderRequests() {
+  const filter = $("#request-filter").value;
+  const list = (state.requests ?? []).filter((r) =>
+    filter === "open" ? r.status !== "done" : filter ? r.status === filter : true,
+  );
+
+  $("#request-list").replaceChildren(
+    ...(list.length
+      ? list.map((r) => {
+          const notes = h("textarea", { rows: 2, maxLength: 2000, value: r.notes || "", placeholder: "Private notes (price quoted, fabric, measurements…)" });
+          const status = h("select", { "aria-label": "Status" },
+            ...Object.entries(statusLabels).map(([v, label]) => h("option", { value: v, text: label, selected: r.status === v })));
+          const save = async (patch, msg) => {
+            try {
+              const updated = await api(`/api/admin/requests/${r.id}`, { method: "PATCH", body: JSON.stringify(patch) });
+              Object.assign(r, updated);
+              await loadRequests();
+              renderRequests();
+              toast(msg);
+            } catch (err) { toast(err.message, true); }
+          };
+          status.addEventListener("change", () => save({ status: status.value }, "Status updated."));
+          const greeting = `Hello ${r.name.split(" ")[0]}, thank you for your custom ${r.itemType.toLowerCase()} request (ref ${r.ref}) on Veloura. `;
+          return h("article", { class: `request-card status-${r.status}` },
+            h("div", { class: "request-head" },
+              h("div", {},
+                h("p", { class: "label muted", text: `${r.ref} · ${dateTime.format(new Date(r.createdAt))}` }),
+                h("h3", { text: `${r.itemType} for ${r.name}` }),
+              ),
+              status,
+            ),
+            h("p", { class: "request-desc", text: r.description }),
+            h("dl", { class: "request-meta" },
+              ...[["WhatsApp", r.phone], ["Measurements", r.measurements], ["Budget", r.budget], ["Needed by", r.neededBy]]
+                .filter(([, v]) => v)
+                .flatMap(([k, v]) => [h("dt", { text: k }), h("dd", { text: v })]),
+            ),
+            r.photos.length > 0 && h("div", { class: "request-photos" },
+              ...r.photos.map((p) => h("a", { href: p.url, target: "_blank", rel: "noopener" }, h("img", { src: p.url, alt: "Reference photo", loading: "lazy" })))),
+            notes,
+            h("div", { class: "request-actions" },
+              h("a", { class: "btn btn-clay", href: `https://wa.me/${r.whatsapp}?text=${encodeURIComponent(greeting)}`, target: "_blank", rel: "noopener", text: "Reply on WhatsApp" }),
+              h("button", { class: "btn btn-line", type: "button", text: "Save notes", onclick: () => save({ notes: notes.value }, "Notes saved.") }),
+              h("button", {
+                class: "link-btn danger-link", type: "button", text: "Delete",
+                onclick: async () => {
+                  if (!confirm(`Delete ${r.name}'s request and photos? This can't be undone.`)) return;
+                  try { await api(`/api/admin/requests/${r.id}`, { method: "DELETE" }); await loadRequests(); renderRequests(); toast("Request deleted."); }
+                  catch (err) { toast(err.message, true); }
+                },
+              }),
+            ),
+          );
+        })
+      : [h("p", { class: "empty", text: filter === "open" || filter === "new" ? "No open requests right now." : "No requests here." })]),
+  );
+}
+
+$("#request-filter").addEventListener("change", renderRequests);
 
 // ---------- Routing (#products, #categories, #product/<id>, #product/new) ----------
 let currentHash = location.hash;
@@ -127,13 +198,17 @@ window.addEventListener("hashchange", () => {
 function route() {
   const hash = location.hash.replace(/^#/, "") || "products";
   const [view, id] = hash.split("/");
-  for (const v of ["products", "editor", "sales", "categories"]) $(`#view-${v}`).hidden = true;
+  for (const v of ["products", "editor", "sales", "requests", "categories"]) $(`#view-${v}`).hidden = true;
   document.querySelectorAll(".tabs a").forEach((a) => a.removeAttribute("aria-current"));
 
   if (view === "product") {
     openEditor(id === "new" ? null : id);
     $("#view-editor").hidden = false;
     document.querySelector('[data-tab="products"]').setAttribute("aria-current", "page");
+  } else if (view === "requests") {
+    loadRequests().then(renderRequests).catch((err) => toast(err.message, true));
+    $("#view-requests").hidden = false;
+    document.querySelector('[data-tab="requests"]').setAttribute("aria-current", "page");
   } else if (view === "sales") {
     renderSales();
     $("#view-sales").hidden = false;

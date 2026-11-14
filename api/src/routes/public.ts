@@ -57,7 +57,8 @@ publicRoutes.get("/images/:id", async (req, res) => {
   }
   const id = new ObjectId(req.params.id);
   const file = await images.find({ _id: id }).next();
-  if (!file) {
+  // Customers' custom-order photos are private; they're only served through the admin.
+  if (!file || file.metadata?.kind === "request") {
     res.status(404).end();
     return;
   }

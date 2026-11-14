@@ -18,9 +18,9 @@ export function SiteFooter({ categories }: { categories: Category[] }) {
             <Link className="arrow-link label" href="/cart">View your bag</Link>
           </div>
           <div>
-            <h3>Styling advice</h3>
-            <p className="muted">Not sure which print suits the outfit you have in mind? Ask us, we love to help.</p>
-            <Link className="arrow-link label" href="/about#contact">Ask us</Link>
+            <h3>Something made for you</h3>
+            <p className="muted">Can&apos;t find exactly what you have in mind? Tell us and we&apos;ll make it in your style and size.</p>
+            <Link className="arrow-link label" href="/custom">Request a custom piece</Link>
           </div>
           <div>
             <h3>Need help?</h3>
@@ -38,6 +38,7 @@ export function SiteFooter({ categories }: { categories: Category[] }) {
               <li><Link href="/">Home</Link></li>
               <li><Link href="/shop">Collection</Link></li>
               <li><Link href="/lookbook">Lookbook</Link></li>
+              <li><Link href="/custom">Custom orders</Link></li>
               <li><Link href="/about">About</Link></li>
               <li><Link href="/about#contact">Contact</Link></li>
             </ul>

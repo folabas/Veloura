@@ -25,6 +25,9 @@ export const config = {
   /** Website's revalidate endpoint, so edits show on the site straight away (optional). */
   revalidateUrl: process.env.FRONTEND_REVALIDATE_URL ?? "",
   revalidateSecret: process.env.REVALIDATE_SECRET ?? "",
+
+  /** The shop's WhatsApp number that custom-order messages open to, international digits. */
+  shopWhatsApp: (process.env.SHOP_WHATSAPP ?? "2347070272426").replace(/\D/g, ""),
 };
 
 /** The server refuses to start with a missing username, a weak password or a short session secret. */

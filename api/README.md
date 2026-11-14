@@ -6,6 +6,9 @@ The website reads from it; the owner edits through the admin panel at `/admin`.
 - **Stack:** Node 22, Express, MongoDB Atlas. Photos are resized to WebP and stored in MongoDB (GridFS),
   because Render's disk is wiped on every deploy.
 - **Public (read-only):** `GET /api/catalog` (categories + visible products), `GET /api/products/:slug`, `GET /images/:id`
+- **Custom orders:** `POST /api/requests/photos` and `POST /api/requests` (rate-limited) take requests from the
+  website's /custom page. They're saved for the admin's Requests tab, and the reply includes a WhatsApp link with the
+  order pre-written for the customer to send. Customers' photos are private to the admin.
 - **Admin (username and password):** `/admin`, and `/api/admin/*` for products, categories and photo uploads.
 
 ## Deploy on Render
