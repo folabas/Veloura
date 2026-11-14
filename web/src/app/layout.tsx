@@ -21,7 +21,9 @@ const display = localFont({
   ],
   variable: "--font-display",
   display: "swap",
-  fallback: ["Didot", "Bodoni 72", "Georgia", "serif"],
+  // No names containing digits here (e.g. "Bodoni 72"): next/font doesn't quote them, and an
+  // unquoted digit makes the whole font-family invalid.
+  fallback: ["Didot", "Georgia", "serif"],
 });
 
 const body = localFont({
